@@ -21,7 +21,7 @@ func main() {
 	}
 
 	lines := strings.Split(string(stdout), "\n")
-	
+
 	var chosen_line string
 	for _, line := range lines {
 		if !strings.Contains(line, "rate information unavailable") {
@@ -35,12 +35,8 @@ func main() {
 	mode := args[2]
 	percent := args[3]
 
-	if mode[len(mode) - 1] == ',' {
-		mode = mode[:len(mode) - 1]
-	}
-
-	if percent[len(percent) - 1] == ',' {
-		percent = percent[:len(percent) - 1]
+	if mode[len(mode)-1] == ',' {
+		mode = mode[:len(mode)-1]
 	}
 
 	var symbol string
@@ -51,14 +47,28 @@ func main() {
 		symbol = "🔌"
 	case "Unknown":
 		symbol = "🔋?"
+	case "Not": // When the battery status is "Not charging,"
+		if args[3] == "charging," {
+			percent = args[4]
+		}
+		symbol = "🔋?"
 	default:
 		symbol = "🔋"
+	}
+
+	if percent[len(percent)-1] == ',' {
+		percent = percent[:len(percent)-1]
 	}
 
 	fmt.Print(symbol)
 	fmt.Print(" ")
 
-	raw_percent := percent[:len(percent) - 1]
+	// Assert
+	if percent[len(percent)-1] != '%' {
+		panic(fmt.Sprintf("percent is invalidly formatted: %s", percent))
+	}
+
+	raw_percent := percent[:len(percent)-1]
 	raw_percent_int, err := strconv.Atoi(raw_percent)
 	if err != nil {
 		log.Fatalf("%v", err)
@@ -73,9 +83,9 @@ func main() {
 
 	fmt.Print(percent)
 
-	if len(args) >= 5 {
+	if len(args) >= 5 && mode != "Not" {
 		remaining := args[4]
-		
+
 		fmt.Printf(" (%s)", remaining)
 	}
 }
